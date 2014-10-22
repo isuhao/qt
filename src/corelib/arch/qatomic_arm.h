@@ -65,10 +65,16 @@ QT_BEGIN_INCLUDE_HEADER
 # include "QtCore/qatomic_armv6.h"
 QT_END_INCLUDE_HEADER
 #else
+#if defined(QT_ARCH_SYLIXOS)
+QT_BEGIN_INCLUDE_HEADER
+# include "QtCore/qatomic_sylixos.h"
+QT_END_INCLUDE_HEADER
+#else
 # define QT_ARCH_ARMV5
 QT_BEGIN_INCLUDE_HEADER
 # include "QtCore/qatomic_armv5.h"
 QT_END_INCLUDE_HEADER
+#endif
 #endif
 
 QT_END_HEADER

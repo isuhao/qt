@@ -163,7 +163,9 @@ typedef short INT16;
 #ifndef _BASETSD_H		/* MinGW is slightly different */
 #ifndef QGLOBAL_H		/* Qt defines it in qglobal.h */
 #ifndef VXWORKS
+#ifndef SYLIXOS
 typedef long INT32;
+#endif
 #endif
 #endif
 #endif

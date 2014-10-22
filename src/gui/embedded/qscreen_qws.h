@@ -193,7 +193,7 @@ class Q_GUI_EXPORT QScreen {
 public:
     enum ClassId { LinuxFBClass, TransformedClass, VNCClass, MultiClass,
                    VFbClass, DirectFBClass, SvgalibClass, ProxyClass,
-                   GLClass, IntfbClass, CustomClass = 1024 };
+                   GLClass, IntfbClass, SylixOSFbClass, CustomClass = 1024 };
 
     QScreen(int display_id, ClassId classId);
     explicit QScreen(int display_id);

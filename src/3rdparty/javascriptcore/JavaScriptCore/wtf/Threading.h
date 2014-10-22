@@ -241,6 +241,26 @@ inline int atomicDecrement(int volatile* addend) { return android_atomic_dec(add
 inline int atomicIncrement(int volatile* addend) { return (int) atomic_add_value((unsigned volatile*)addend, 1); }
 inline int atomicDecrement(int volatile* addend) { return (int) atomic_sub_value((unsigned volatile*)addend, 1); }
 
+#elif OS(SYLIXOS)
+
+inline int atomicIncrement(int volatile* addend) {
+    INTREG reg;
+    int ret;
+    API_AtomicLock(&reg);
+    ret = *addend++;
+    API_AtomicUnlock(reg);
+    return ret;
+}
+
+inline int atomicDecrement(int volatile* addend) {
+    INTREG reg;
+    int ret;
+    API_AtomicLock(&reg);
+    ret = *addend--;
+    API_AtomicUnlock(reg);
+    return ret;
+}
+
 #elif COMPILER(GCC) && !CPU(SPARC64) && !OS(SYMBIAN) // sizeof(_Atomic_word) != sizeof(int) on sparc64 gcc
 #define WTF_USE_LOCKFREE_THREADSAFESHARED 1
 

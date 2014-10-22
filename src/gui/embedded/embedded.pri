@@ -149,6 +149,11 @@ embedded {
 		INCLUDEPATH += $$QT_SOURCE_TREE/src/plugins/gfxdrivers/directfb
                 include($$PWD/directfb.pri)
 	}
+
+	contains( gfx-drivers, sylixosfb ) {
+		HEADERS += embedded/qscreensylixosfb_qws.h
+		SOURCES += embedded/qscreensylixosfb_qws.cpp
+	}
 #
 # Keyboard drivers
 #
@@ -184,6 +189,11 @@ embedded {
                 HEADERS += embedded/qkbdintegrity_qws.h
                 SOURCES += embedded/qkbdintegrity_qws.cpp
         }
+
+	contains( kbd-drivers, sylixosinput ) {
+		HEADERS += embedded/qkbdsylixosinput_qws.h
+		SOURCES += embedded/qkbdsylixosinput_qws.cpp
+	}
 
 #
 # Mouse drivers
@@ -223,4 +233,9 @@ embedded {
                 HEADERS += embedded/qmouseintegrity_qws.h
                 SOURCES += embedded/qmouseintegrity_qws.cpp
         }
+
+	contains( mouse-drivers, sylixosinput ) {
+		HEADERS += embedded/qmousesylixosinput_qws.h
+		SOURCES += embedded/qmousesylixosinput_qws.cpp
+	}
 }

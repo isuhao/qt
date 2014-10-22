@@ -111,7 +111,10 @@ QT_END_NAMESPACE
 #include <spawn.h>
 #include <sys/neutrino.h>
 #endif
-
+#ifdef Q_OS_SYLIXOS
+#include <spawn.h>
+#include <sys/wait.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -555,6 +558,81 @@ static char **_q_dupEnvironment(const QProcessEnvironmentPrivate::Hash &environm
     return envp;
 }
 
+#if defined(Q_OS_SYLIXOS)
+static pid_t sylixos_spawn(const char *workingDir, char **argv, char **envp, QProcessPrivate *thiz)
+{
+    posix_spawnattr_t   attr;
+    posix_spawn_file_actions_t  fattr;
+    pid_t ret = -1;
+    bool  need_destory_attr  = false;
+    bool  need_destory_fattr = false;
+
+    if (posix_spawnattr_init(&attr) != 0) {
+        goto    __return;
+    }
+    need_destory_attr = true; // will need destory 'attr'
+
+    // set working directory
+    if (workingDir) {
+        posix_spawnattr_setwd(&attr, workingDir);
+    }
+
+    if (thiz) {
+        if (posix_spawn_file_actions_init(&fattr) != 0) {
+            goto    __return;
+        }
+        need_destory_fattr = true; // will need destory 'fattr'
+
+        // copy the stdin socket (without closing on exec)
+        posix_spawn_file_actions_adddup2(&fattr, thiz->stdinChannel.pipe[0], QT_FILENO(stdin));
+
+        // copy the stdout and stderr if asked to
+        if (thiz->processChannelMode != QProcess::ForwardedChannels) {
+            posix_spawn_file_actions_adddup2(&fattr, thiz->stdoutChannel.pipe[1], QT_FILENO(stdout));
+
+            // merge stdout and stderr if asked to
+            if (thiz->processChannelMode == QProcess::MergedChannels) {
+                posix_spawn_file_actions_adddup2(&fattr, thiz->stdoutChannel.pipe[1], QT_FILENO(stderr));
+            } else {
+                posix_spawn_file_actions_adddup2(&fattr, thiz->stderrChannel.pipe[1], QT_FILENO(stderr));
+            }
+        }
+
+        // make sure this fd is closed if execvp() succeeds
+        posix_spawn_file_actions_addclose(&fattr, thiz->childStartedPipe[0]);
+
+        // spawn child process with <sylixos posix spawn> interface.
+        if (posix_spawnp(&ret, argv[0], &fattr, &attr, argv, envp) != 0) {
+            ret = -1;
+        }
+
+    } else {
+        // spawn child process with <sylixos posix spawn> interface.
+        if (posix_spawnp(&ret, argv[0], NULL, &attr, argv, envp) != 0) {
+            ret = -1;
+        }
+    }
+
+__return:
+    if ((ret < 0) && thiz) {
+        QString error = qt_error_string(errno);
+        qt_safe_write(thiz->childStartedPipe[1], error.data(), error.length() * sizeof(QChar));
+        qt_safe_close(thiz->childStartedPipe[1]);
+        thiz->childStartedPipe[1] = -1;
+    }
+
+    if (need_destory_fattr) {
+        posix_spawn_file_actions_destroy(&fattr);
+    }
+
+    if (need_destory_attr) {
+        posix_spawnattr_destroy(&attr);
+    }
+
+    return  ret;
+}
+#endif
+
 #ifdef Q_OS_MAC
 Q_GLOBAL_STATIC(QMutex, cfbundleMutex);
 #endif
@@ -682,6 +760,9 @@ void QProcessPrivate::startProcess()
     processManager()->lock();
 #if defined(Q_OS_QNX)
     pid_t childPid = spawnChild(workingDirPtr, argv, envp);
+#elif defined(Q_OS_SYLIXOS)
+    pid_t childPid = sylixos_spawn(workingDirPtr, argv, envp, this);
+    int lastForkErrno = errno;
 #else
     pid_t childPid = fork();
     int lastForkErrno = errno;
@@ -952,7 +1033,7 @@ qint64 QProcessPrivate::bytesAvailableFromStdout() const
 {
     int nbytes = 0;
     qint64 available = 0;
-    if (::ioctl(stdoutChannel.pipe[0], FIONREAD, (char *) &nbytes) >= 0)
+    if (stdoutChannel.pipe[0] != -1 && ::ioctl(stdoutChannel.pipe[0], FIONREAD, (char *) &nbytes) >= 0)
         available = (qint64) nbytes;
 #if defined (QPROCESS_DEBUG)
     qDebug("QProcessPrivate::bytesAvailableFromStdout() == %lld", available);
@@ -964,7 +1045,7 @@ qint64 QProcessPrivate::bytesAvailableFromStderr() const
 {
     int nbytes = 0;
     qint64 available = 0;
-    if (::ioctl(stderrChannel.pipe[0], FIONREAD, (char *) &nbytes) >= 0)
+    if (stderrChannel.pipe[0] != -1 && ::ioctl(stderrChannel.pipe[0], FIONREAD, (char *) &nbytes) >= 0)
         available = (qint64) nbytes;
 #if defined (QPROCESS_DEBUG)
     qDebug("QProcessPrivate::bytesAvailableFromStderr() == %lld", available);
@@ -1356,6 +1437,41 @@ bool QProcessPrivate::startDetached(const QString &program, const QStringList &a
     pid_t childPid = doSpawn(fd_count, fd_map, raw_argv.data(), envp, workingDirPtr, true);
     if (pid && childPid != -1)
         *pid = childPid;
+
+    return childPid != -1;
+}
+
+#elif defined(Q_OS_SYLIXOS)
+bool QProcessPrivate::startDetached(const QString &program, const QStringList &arguments, const QString &workingDirectory, qint64 *pid)
+{
+    QList<QByteArray> enc_args;
+    enc_args.append(QFile::encodeName(program));
+    for (int i = 0; i < arguments.size(); ++i)
+        enc_args.append(arguments.at(i).toLocal8Bit());
+
+    const int argc = enc_args.size();
+    QScopedArrayPointer<char*> raw_argv(new char*[argc + 1]);
+    for (int i = 0; i < argc; ++i)
+        raw_argv[i] = const_cast<char *>(enc_args.at(i).data());
+    raw_argv[argc] = 0;
+
+    char **envp = 0; // inherit environment
+
+    // Encode the working directory if it's non-empty, otherwise just pass 0.
+    const char *workingDirPtr = 0;
+    QByteArray encodedWorkingDirectory;
+    if (!workingDirectory.isEmpty()) {
+        encodedWorkingDirectory = QFile::encodeName(workingDirectory);
+        workingDirPtr = encodedWorkingDirectory.constData();
+    }
+
+    pid_t childPid = sylixos_spawn(workingDirPtr, raw_argv.data(), envp, NULL);
+    if (childPid > 0) {
+        detach(childPid);
+        if (pid) {
+            *pid = childPid;
+        }
+    }
 
     return childPid != -1;
 }

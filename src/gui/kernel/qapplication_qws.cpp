@@ -1099,7 +1099,11 @@ void QWSDisplay::Data::connectToPipe()
     int i = 0;
     while (!csocket->connectToLocalFile(pipe)) {
         if (++i > qws_connection_timeout) {
+#if defined(Q_OS_SYLIXOS)
+             qWarning("No Qt for SylixOS server appears to be running.");
+#else
             qWarning("No Qt for Embedded Linux server appears to be running.");
+#endif
             qWarning("If you want to run this program as a server,");
             qWarning("add the \"-qws\" command-line option.");
             exit(1);

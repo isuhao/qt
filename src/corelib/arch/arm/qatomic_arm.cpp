@@ -51,7 +51,11 @@ QT_BEGIN_NAMESPACE
 
 QT_USE_NAMESPACE
 
+#if defined(QT_ARCH_SYLIXOS)
+Q_CORE_EXPORT atomic_t q_atomic_lock = {0};
+#else
 Q_CORE_EXPORT char q_atomic_lock = 0;
+#endif
 
 Q_CORE_EXPORT void qt_atomic_yield(int *count)
 {

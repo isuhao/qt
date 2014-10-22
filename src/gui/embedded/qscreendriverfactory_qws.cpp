@@ -49,6 +49,7 @@
 #include "qscreenmulti_qws_p.h"
 #include "qscreenqnx_qws.h"
 #include "qscreenintegrityfb_qws.h"
+#include "qscreensylixosfb_qws.h"
 #include <stdlib.h>
 #include "private/qfactoryloader_p.h"
 #include "qscreendriverplugin_qws.h"
@@ -109,6 +110,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
 QScreen *QScreenDriverFactory::create(const QString& key, int displayId)
 {
     QString driver = key.toLower();
+#if defined(Q_OS_SYLIXOS)
+    if (driver == QLatin1String("sylixosfb"))
+        return new QSylixOSFbScreen(displayId);
+#endif
 #if defined(Q_OS_QNX) && !defined(QT_NO_QWS_QNX)
     if (driver == QLatin1String("qnx") || driver.isEmpty())
         return new QQnxScreen(displayId);
@@ -161,6 +166,9 @@ QStringList QScreenDriverFactory::keys()
 {
     QStringList list;
 
+#if defined(Q_OS_SYLIXOS)
+    list << QLatin1String("SYLIXOSFB");
+#endif
 #if defined(Q_OS_QNX) && !defined(QT_NO_QWS_QNX)
     list << QLatin1String("QNX");
 #endif

@@ -83,6 +83,8 @@ QWSLock::QWSLock(int id) : semId(id)
     QWSSignalHandler::instance()->addWSLock(this);
 #endif
 
+    owned = false;
+
 #ifndef QT_POSIX_IPC
     if (semId == -1) {
         semId = semget(IPC_PRIVATE, 3, IPC_CREAT | 0666);
@@ -90,6 +92,7 @@ QWSLock::QWSLock(int id) : semId(id)
             perror("QWSLock::QWSLock");
             qFatal("Unable to create semaphore");
         }
+        owned = true;
 
         qt_semun semval;
         semval.array = initialValues;
@@ -100,7 +103,6 @@ QWSLock::QWSLock(int id) : semId(id)
     }
 #else
     sems[0] = sems[1] = sems[2] = SEM_FAILED;
-    owned = false;
 
     if (semId == -1) {
         // ### generate really unique IDs
@@ -134,9 +136,11 @@ QWSLock::~QWSLock()
 
     if (semId != -1) {
 #ifndef QT_POSIX_IPC
-        qt_semun semval;
-        semval.val = 0;
-        semctl(semId, 0, IPC_RMID, semval);
+        if (owned) {
+            qt_semun semval;
+            semval.val = 0;
+            semctl(semId, 0, IPC_RMID, semval);
+        }
         semId = -1;
 #else
         // emulate the SEM_UNDO behavior for the BackingStore lock

@@ -302,7 +302,7 @@ int QEventDispatcherUNIXPrivate::processThreadWakeUp(int nsel)
     if (nsel > 0 && FD_ISSET(thread_pipe[0], &sn_vec[0].select_fds)) {
         // some other thread woke us up... consume the data on the thread pipe so that
         // select doesn't immediately return next time
-#if defined(Q_OS_VXWORKS)
+#if defined(Q_OS_VXWORKS) || defined(Q_OS_SYLIXOS) 
         char c[16];
         ::read(thread_pipe[0], c, sizeof(c));
         ::ioctl(thread_pipe[0], FIOFLUSH, 0);

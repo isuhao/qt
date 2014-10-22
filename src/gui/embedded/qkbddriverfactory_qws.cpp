@@ -50,6 +50,7 @@
 #include "qkbdvfb_qws.h"
 #include "qkbdqnx_qws.h"
 #include "qkbdintegrity_qws.h"
+#include "qkbdsylixosinput_qws.h"
 #include <stdlib.h>
 #include "private/qfactoryloader_p.h"
 #include "qkbddriverplugin_qws.h"
@@ -103,6 +104,10 @@ Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
 QWSKeyboardHandler *QKbdDriverFactory::create(const QString& key, const QString& device)
 {
     QString driver = key.toLower();
+#if defined(Q_OS_SYLIXOS)
+    if (driver == QLatin1String("sylixosinput") || driver.isEmpty())
+        return new QSylixOSInputKeyboardHandler(device);
+#endif
 #if defined(Q_OS_QNX) && !defined(QT_NO_QWS_KBD_QNX)
     if (driver == QLatin1String("qnx") || driver.isEmpty())
         return new QWSQnxKeyboardHandler(device);
@@ -153,6 +158,9 @@ QStringList QKbdDriverFactory::keys()
 {
     QStringList list;
 
+#if defined(Q_OS_SYLIXOS)
+    list << QLatin1String("SYLIXOSINPUT");
+#endif
 #if defined(Q_OS_QNX) && !defined(QT_NO_QWS_KBD_QNX)
     list << QLatin1String("QNX");
 #endif

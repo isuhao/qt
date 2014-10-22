@@ -44,6 +44,10 @@ embedded: SUBDIRS += makeqpf
 
 !wince*:!cross_compile:SUBDIRS += qdoc3
 
+sylixos {
+     SUBDIRS -= makeqpf
+}
+
 CONFIG+=ordered
 QTDIR_build:REQUIRES = "contains(QT_CONFIG, full-config)"
 

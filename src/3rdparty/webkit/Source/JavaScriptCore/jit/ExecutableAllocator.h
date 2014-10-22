@@ -326,6 +326,11 @@ public:
         syscall(__NR_cacheflush, reinterpret_cast<unsigned>(code), size, CACHEFLUSH_D_WB | CACHEFLUSH_I);
 #endif
     }
+#elif OS(SYLIXOS)
+    static void cacheFlush(void* code, size_t size)
+    {
+        API_CacheTextUpdate(code, size); // flush d-cache and Invalidate i-cache
+    }
 #else
     #error "The cacheFlush support is missing on this platform."
 #endif

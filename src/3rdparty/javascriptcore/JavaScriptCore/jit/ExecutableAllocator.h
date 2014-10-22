@@ -238,6 +238,11 @@ public:
     {
         CacheRangeFlush(code, size, CACHE_SYNC_ALL);
     }
+#elif OS(SYLIXOS)
+    static void cacheFlush(void* code, size_t size)
+    {
+        API_CacheTextUpdate(code, size); // flush d-cache and Invalidate i-cache
+    }
 #else
     #error "The cacheFlush support is missing on this platform."
 #endif

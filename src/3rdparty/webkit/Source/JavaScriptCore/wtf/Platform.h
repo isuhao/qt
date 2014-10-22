@@ -466,6 +466,11 @@
 #define WTF_OS_SYMBIAN 1
 #endif
 
+/* OS(SYLIXOS) - SylixOS */
+#ifdef SYLIXOS
+#define WTF_OS_SYLIXOS 1
+#endif
+
 /* OS(UNIX) - Any Unix-like system */
 #if   OS(AIX)              \
     || OS(ANDROID)          \
@@ -480,7 +485,8 @@
     || OS(SYMBIAN)          \
     || defined(unix)        \
     || defined(__unix)      \
-    || defined(__unix__)
+    || defined(__unix__)    \
+    || defined(SYLIXOS)
 #define WTF_OS_UNIX 1
 #endif
 
@@ -854,6 +860,17 @@
 #define HAVE_STRINGS_H 1
 #define HAVE_SYS_PARAM_H 1
 #define HAVE_SYS_TIME_H 1
+
+#elif OS(SYLIXOS)
+
+#undef HAVE_TM_GMTOFF
+#undef HAVE_TM_ZONE
+#define HAVE_ERRNO_H 1
+#define HAVE_MMAP 1
+#define HAVE_STRINGS_H 1
+#define HAVE_SYS_TIME_H 1
+#define HAVE_PTHREAD_NP_H 1
+#define HAVE_SYS_PARAM_H 1
 
 #else
 

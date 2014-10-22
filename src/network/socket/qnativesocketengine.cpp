@@ -387,10 +387,12 @@ bool QNativeSocketEngine::initialize(QAbstractSocket::SocketType socketType, QAb
 
 
     // Make sure we receive out-of-band data
+#if !defined(Q_OS_SYLIXOS)
     if (socketType == QAbstractSocket::TcpSocket
         && !setOption(ReceiveOutOfBandData, 1)) {
         qWarning("QNativeSocketEngine::initialize unable to inline out-of-band data");
     }
+#endif
 
     // Before Qt 4.6, we always set the send and receive buffer size to 49152 as
     // this was found to be an optimal value. However, modern OS

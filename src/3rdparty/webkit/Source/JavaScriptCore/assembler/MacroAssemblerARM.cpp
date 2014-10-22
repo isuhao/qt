@@ -30,7 +30,7 @@
 
 #include "MacroAssemblerARM.h"
 
-#if OS(LINUX)
+#if OS(LINUX) || OS(SYLIXOS)
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -43,7 +43,7 @@ namespace JSC {
 
 static bool isVFPPresent()
 {
-#if OS(LINUX)
+#if OS(LINUX) || OS(SYLIXOS)
     int fd = open("/proc/self/auxv", O_RDONLY);
     if (fd > 0) {
         Elf32_auxv_t aux;
