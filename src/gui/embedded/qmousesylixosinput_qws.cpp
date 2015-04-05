@@ -158,7 +158,7 @@ void QSylixOSInputMouseHandler::socketActivated()
                 pos = transform(QPoint(notify->xanalog, notify->yanalog));
                 limitToScreen(pos);
                 mouseChanged(pos, buttons, 0);
-               queuedPos = pos;
+                queuedPos = pos;
             } else {
                 qDebug("QSylixOSInputMouseHandler: send (%d, %d) to filter", notify->xanalog, notify->yanalog);
                        sendFiltered(QPoint(notify->xanalog, notify->yanalog), buttons);

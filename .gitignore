@@ -103,7 +103,6 @@ qmake/Makefile.bak
 src/corelib/global/qconfig.cpp
 src/corelib/global/qconfig.h
 src/corelib/global/qconfig.h.qmake
-src/tools/uic/qclass_lib_map.h
 ui_*.h
 tests/auto/qprocess/test*/*.exe
 tests/auto/qtcpsocket/stressTest/*.exe
@@ -197,8 +196,6 @@ config.tests/unix/sse2/sse2
 
 debug
 examples/tools/plugandpaint/plugins
-include/*
-include/*/*
 lib/*
 !lib/fonts
 !lib/README
