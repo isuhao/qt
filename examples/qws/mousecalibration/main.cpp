@@ -49,6 +49,10 @@
 //! [0]
 int main(int argc, char **argv)
 {
+#if defined(SYLIXOS)
+	::remove("/etc/pointercal");
+#endif
+	
     QApplication app(argc, argv, QApplication::GuiServer);
 
     if (!QWSServer::mouseHandler())
