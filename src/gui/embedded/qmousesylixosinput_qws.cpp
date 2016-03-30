@@ -129,7 +129,7 @@ void QSylixOSInputMouseHandler::socketActivated()
 {
     QPoint queuedPos = mousePos;
 
-    mouse_event_notify buffer[2];
+    mouse_event_notify buffer[32];
 
     int n = QT_READ(d->mouse_fd, reinterpret_cast<char *>(buffer), sizeof(buffer));
     if (n <= 0) {
