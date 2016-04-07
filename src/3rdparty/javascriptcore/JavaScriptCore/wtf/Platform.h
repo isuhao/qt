@@ -336,7 +336,7 @@
 /* CPU(MIPS) - MIPS, any version */
 #if (defined(mips) || defined(__mips__) || defined(MIPS) || defined(_MIPS_))
 #define WTF_CPU_MIPS 1
-#ifdef SYLIXOS
+#ifndef SYLIXOS
 #include <sgidefs.h>
 #endif
 #if defined(__MIPSEB__)
