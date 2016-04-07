@@ -360,6 +360,7 @@ private:
     friend class QQnxScreen;
     friend class QProxyScreen;
     friend class QIntfbScreen;
+    friend class QSylixOSFbScreen;
 #endif
     friend void qt_solidFill_setup(QScreen*, const QColor&, const QRegion&);
     friend void qt_blit_setup(QScreen *screen, const QImage &image,
